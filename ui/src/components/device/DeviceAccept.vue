@@ -1,16 +1,36 @@
 <template>
   <fragment>
-    <v-tooltip bottom>
-      <template #activator="{ on }">
-        <v-icon
-          v-on="on"
-          @click="dialog = !dialog"
-        >
-          check
-        </v-icon>
-      </template>
-      <span>Check</span>
-    </v-tooltip>
+    <div
+      v-if="!stateList"
+    >
+      <v-btn
+        x-small
+        color="primary"
+        @click="statusOperation(true)"
+      >
+        Accept
+      </v-btn>
+    </div>
+
+    <div
+      v-else
+    >
+      <v-btn
+        class="mr-2"
+        small
+        outlined
+        @click="statusOperation(true)"
+      >
+        Accept
+      </v-btn>
+      <v-btn
+        small
+        outlined
+        @click="statusOperation(false)"
+      >
+        Reject
+      </v-btn>
+    </div>
 
     <v-dialog
       v-model="dialog"
@@ -22,7 +42,16 @@
         </v-card-title>
 
         <v-card-text class="mt-4 mb-3 pb-1">
-          You are about to accept this device
+          <div
+            v-if="operationAccept"
+          >
+            You are about to accept this device
+          </div>
+          <div
+            v-else
+          >
+            You are about to reject this device
+          </div>
         </v-card-text>
 
         <v-card-actions>
@@ -37,9 +66,18 @@
 
           <v-btn
             text
-            @click="accept();"
+            @click="operationDevice();"
           >
-            Accept
+            <div
+              v-if="operationAccept"
+            >
+              Accept
+            </div>
+            <div
+              v-else
+            >
+              Reject
+            </div>
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -57,19 +95,41 @@ export default {
       type: String,
       required: true,
     },
+
+    stateList: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
 
   data() {
     return {
       dialog: false,
+      operationAccept: false,
     };
   },
 
   methods: {
-    async accept() {
-      await this.$store.dispatch('devices/accept', this.uid);
+    statusOperation(operation) {
+      this.operationAccept = operation;
       this.dialog = !this.dialog;
-      this.$router.push('/devices');
+    },
+
+    async operationDevice() {
+      if (this.operationAccept) {
+        await this.$store.dispatch('devices/accept', this.uid);
+      } else {
+        await this.$store.dispatch('devices/reject', this.uid);
+      }
+
+      this.$emit('update');
+      if (window.location.pathname === '/devices/pending') {
+        await this.$store.dispatch('devices/refresh');
+        this.$store.dispatch('notifications/fetch');
+      }
+
+      this.dialog = !this.dialog;
     },
   },
 };

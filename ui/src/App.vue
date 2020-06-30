@@ -65,20 +65,7 @@
         <v-icon>help</v-icon>
       </v-chip>
 
-      <router-link to="/devices/pending">
-        <v-badge
-          bordered
-          color="green"
-          :content="stats.pending_devices"
-          :value="stats.pending_devices"
-          overlap
-          class="mr-2"
-        >
-          <v-chip>
-            <v-icon>notifications</v-icon>
-          </v-chip>
-        </v-badge>
-      </router-link>
+      <Notification />
 
       <v-menu
         offset-y
@@ -153,8 +140,14 @@
 
 <script>
 
+import Notification from '@/components/app_bar/notification/Notification';
+
 export default {
   name: 'App',
+
+  components: {
+    Notification,
+  },
 
   data() {
     return {
@@ -201,14 +194,6 @@ export default {
     isLoggedIn() {
       return this.$store.getters['auth/isLoggedIn'];
     },
-
-    stats() {
-      return this.$store.getters['stats/stats'];
-    },
-  },
-
-  async created() {
-    await this.$store.dispatch('stats/get');
   },
 
   methods: {

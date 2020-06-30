@@ -8,6 +8,9 @@ export default {
     devices: [],
     device: [],
     numberDevices: 0,
+    page: 0,
+    perPage: 0,
+    filter: null,
   },
 
   getters: {
@@ -15,6 +18,9 @@ export default {
     get: (state) => state.device,
     getNumberDevices: (state) => state.numberDevices,
     getStatusCode: (state) => state.statusCode,
+    getPage: (state) => state.page,
+    getPerPage: (state) => state.perPage,
+    getFilter: (state) => state.filter,
   },
 
   mutations: {
@@ -36,12 +42,19 @@ export default {
         Vue.set(state, 'device', data);
       }
     },
+
+    setPagePerpageFilter: (state, data) => {
+      Vue.set(state, 'page', data.page);
+      Vue.set(state, 'perPage', data.perPage);
+      Vue.set(state, 'filter', data.filter);
+    },
   },
 
   actions: {
     fetch: async (context, data) => {
       const res = await apiDevice.fetchDevices(data.perPage, data.page, data.filter, data.status);
       context.commit('setDevices', res);
+      context.commit('setPagePerpageFilter', data);
     },
 
     remove: async (context, uid) => {
@@ -60,6 +73,15 @@ export default {
 
     accept: async (context, uid) => {
       await apiDevice.acceptDevice(uid);
+    },
+
+    reject: async (context, uid) => {
+      await apiDevice.rejectDevice(uid);
+    },
+
+    refresh: async ({ commit, state }) => {
+      const res = await apiDevice.fetchDevices(state.perPage, state.page, state.filter, 'pending');
+      commit('setDevices', res);
     },
   },
 };

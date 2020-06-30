@@ -19,23 +19,28 @@
         flat
         color="transparent"
       />
+
       <v-divider />
 
       <v-card-text class="pa-0">
         <v-data-table
           class="elevation-1"
           :headers="headers"
-          :items="listDevices"
+          :items="getListPendingDevices"
           item-key="uid"
           :sort-by="['started_at']"
           :sort-desc="[true]"
           :items-per-page="10"
           :footer-props="{'items-per-page-options': [10, 25, 50, 100]}"
-          :server-items-length="numberDevices"
+          :server-items-length="getNumberPendingDevices"
           :options.sync="pagination"
           :disable-sort="true"
           :search="search"
         >
+          <template slot="no-data">
+            There are no more pending devices
+          </template>
+
           <template v-slot:item.hostname="{ item }">
             <router-link :to="{ name: 'detailsDevice', params: { id: item.uid } }">
               {{ item.name }}
@@ -50,6 +55,8 @@
           <template v-slot:item.actions="{ item }">
             <DeviceAccept
               :uid="item.uid"
+              :state-list="true"
+              @update="refresh"
             />
           </template>
         </v-data-table>
@@ -75,8 +82,6 @@ export default {
 
   data() {
     return {
-      numberDevices: 0,
-      listDevices: [],
       pagination: {},
       search: '',
       headers: [
@@ -100,21 +105,31 @@ export default {
     };
   },
 
+  computed: {
+    getListPendingDevices() {
+      return this.$store.getters['devices/list'];
+    },
+
+    getNumberPendingDevices() {
+      return this.$store.getters['devices/getNumberDevices'];
+    },
+  },
+
   watch: {
     pagination: {
       handler() {
-        this.getDevices();
+        this.getPendingDevices();
       },
       deep: true,
     },
 
     search() {
-      this.getDevices();
+      this.getPendingDevices();
     },
   },
 
   methods: {
-    async getDevices() {
+    getPendingDevices() {
       let filter = null;
       let encodedFilter = null;
 
@@ -130,9 +145,11 @@ export default {
         status: 'pending',
       };
 
-      await this.$store.dispatch('devices/fetch', data);
-      this.listDevices = this.$store.getters['devices/list'];
-      this.numberDevices = this.$store.getters['devices/getNumberDevices'];
+      this.$store.dispatch('devices/fetch', data);
+    },
+
+    refresh() {
+      this.getPendingDevices();
     },
   },
 };
