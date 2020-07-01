@@ -519,6 +519,7 @@ func (s *Store) RecordSession(ctx context.Context, uid models.UID, recordMessage
 	record.UID = uid
 	record.Message = recordMessage
 	record.TenantID = session.TenantID
+	record.Time = time.Now()
 
 	if _, err := s.db.Collection("recorded_sessions").InsertOne(ctx, &record); err != nil {
 		return err
