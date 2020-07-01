@@ -116,7 +116,7 @@ export default {
       if (this.logs[i].message.includes('@')) { // hostname verify,
         this.xterm.write(`${this.logs[i].message}`);
       } else {
-        this.xterm.write(`${this.logs[i].message}\r\n`);
+        this.xterm.write(`${this.logs[i].message}`);
       }
     },
   },
