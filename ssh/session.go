@@ -192,14 +192,12 @@ func (s *Session) connect(passwd string, session sshserver.Session, conn net.Con
 					}).Error("Failed to copy from stdout in pty session")
 				}
 				waitingString += string(buf[:n])
-				if bytes.Contains(buf[:n], []byte("\n")) {
-					var sessionRecord struct {
-						Log string `json:"log"`
-					}
-					sessionRecord.Log = waitingString
-					_, _, _ = gorequest.New().Post(fmt.Sprintf("http://api:8080/internal/sessions/%s/record", s.UID)).Send(sessionRecord).End()
-					waitingString = ""
+				var sessionRecord struct {
+					Log string `json:"log"`
 				}
+				sessionRecord.Log = waitingString
+				_, _, _ = gorequest.New().Post(fmt.Sprintf("http://api:8080/internal/sessions/%s/record", s.UID)).Send(sessionRecord).End()
+				waitingString = ""
 			}
 		}()
 
