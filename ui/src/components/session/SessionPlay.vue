@@ -35,7 +35,6 @@
             >
               Play
             </v-btn>
-            <v-spacer />
             <v-slider
               v-model="currentTime"
               readonly
@@ -130,15 +129,20 @@ export default {
       }
       const duration = moment.duration(interval, 'milliseconds');
       const tD = {
-        ms: Math.floor(duration.asMilliseconds()),
         seconds: Math.floor(duration.asSeconds()),
         minutes: Math.floor(duration.asMinutes()),
         hours: Math.floor(duration.asHours()),
       };
       return {
-        display: `${tD.hours}:${tD.minutes}:${tD.seconds}:${tD.ms - tD.seconds * 1000}`,
+        display: `${tD.hours}:${tD.minutes}:${tD.seconds}`,
         intervalLength: interval,
       };
+    },
+
+    timer() {
+      if (this.currentTime >= this.totalLength) return;
+      this.currentTime += 100;
+      this.iterativeTimer = setTimeout(this.timer.bind(null), 100);
     },
 
     connect() {
@@ -148,6 +152,7 @@ export default {
       this.fitAddon.fit();
       this.xterm.focus();
       this.print(0, this.logsData);
+      this.timer();
       if (this.xterm.element) { // check already existence
         this.xterm.reset();
       }
@@ -156,23 +161,20 @@ export default {
     close() {
       if (this.xterm) this.xterm.dispose();
       this.disable = false;
+      clearInterval(this.iterativePrinting);
+      clearInterval(this.iterativeTimer);
+      this.currentTime = 0;
     },
 
     print(i, obj) {
-      this.check_hostname(i);
+      this.xterm.write(`${this.logs[i].message}`);
       if (i === this.logs.length - 1) {
-        this.currentTime = this.duration.interval;
         return;
       }
       const nextObj = this.logs[i + 1];
       const now = new Date(obj.time);
       const future = new Date(nextObj.time);
-      this.currentTime += future - now;
-      setTimeout(this.print.bind(null, i + 1, nextObj), future.getTime() - now.getTime());
-    },
-
-    check_hostname(i) {
-      this.xterm.write(`${this.logs[i].message}`);
+      this.iterativePrinting = setTimeout(this.print.bind(null, i + 1, nextObj), future - now);
     },
   },
 };
