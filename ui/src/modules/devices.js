@@ -48,6 +48,10 @@ export default {
       Vue.set(state, 'perPage', data.perPage);
       Vue.set(state, 'filter', data.filter);
     },
+
+    setFilter: (state, filter) => {
+      Vue.set(state, 'filter', filter);
+    },
   },
 
   actions: {
@@ -79,8 +83,17 @@ export default {
       await apiDevice.rejectDevice(uid);
     },
 
+    setFilter: async (context, filter) => {
+      context.commit('setFilter', filter);
+    },
+
     refresh: async ({ commit, state }) => {
       const res = await apiDevice.fetchDevices(state.perPage, state.page, state.filter, 'pending');
+      commit('setDevices', res);
+    },
+
+    refresh2: async ({ commit, state }) => {
+      const res = await apiDevice.fetchDevices(state.perPage, state.page, state.filter, 'allow');
       commit('setDevices', res);
     },
   },

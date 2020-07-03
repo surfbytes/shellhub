@@ -20,12 +20,6 @@
       >
         Add Device
       </v-btn>
-      <v-btn
-        outlined
-        to="/devices/pending"
-      >
-        Manage Devices
-      </v-btn>
     </div>
     <v-card class="mt-2">
       <v-app-bar
@@ -35,7 +29,7 @@
         <v-tabs>
           <v-tab>Device List</v-tab>
           <v-tab>Pending</v-tab>
-        <v-tab>Rejected</v-tab>
+          <v-tab>Rejected</v-tab>
         </v-tabs>
       </v-app-bar>
       <v-divider />
