@@ -41,6 +41,7 @@
 
         <SessionPlay
           :uid="session.uid"
+          :authenticated="session.authenticated"
         />
 
         <v-icon

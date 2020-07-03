@@ -3,6 +3,7 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-icon
+          v-if="auth"
           v-on="on"
           @click="openPlay()"
         >
@@ -91,6 +92,10 @@ export default {
       type: String,
       required: true,
     },
+    authenticated: {
+      type: Boolean,
+      required: true,
+    },
   },
 
   data() {
@@ -108,6 +113,12 @@ export default {
   },
 
   computed: {
+    auth: {
+      get() {
+        return this.authenticated;
+      },
+    },
+
     length() {
       return this.logs.length;
     },
@@ -130,15 +141,15 @@ export default {
   },
 
   async created() {
-    await this.$store.dispatch('sessions/getLogSession', this.uid);
-    this.logs = this.$store.getters['sessions/getLogSession'];
-    this.totalLength = this.getDisplaySliderInfo(null).intervalLength;
-    this.endTimerDisplay = this.getDisplaySliderInfo(null).display;
-    this.getTimerNow = this.getDisplaySliderInfo(this.currentTime).display;
-    this.cols = this.logs[0].width;
-    this.rows = this.logs[0].height;
-    // eslint-disable-next-line no-console
-    console.log(this.logs);
+    if (this.auth) {
+      await this.$store.dispatch('sessions/getLogSession', this.uid);
+      this.logs = this.$store.getters['sessions/getLogSession'];
+      this.totalLength = this.getDisplaySliderInfo(null).intervalLength;
+      this.endTimerDisplay = this.getDisplaySliderInfo(null).display;
+      this.getTimerNow = this.getDisplaySliderInfo(this.currentTime).display;
+      this.cols = this.logs[0].width;
+      this.rows = this.logs[0].height;
+    }
   },
 
   methods: {
