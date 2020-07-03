@@ -125,7 +125,7 @@ export default {
 
       this.$emit('update');
       if (window.location.pathname === '/devices/pending') {
-        await this.$store.dispatch('devices/refresh');
+        this.$store.dispatch('devices/refresh');
         this.$store.dispatch('notifications/fetch');
       }
 

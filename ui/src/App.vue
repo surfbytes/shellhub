@@ -7,7 +7,7 @@
       clipped
       dark
     >
-      <v-list>
+      <!-- <v-list>
         <v-list-item
           v-for="item in items"
           :key="item.title"
@@ -22,6 +22,35 @@
             <v-list-item-title v-text="item.title" />
           </v-list-item-content>
         </v-list-item>
+      </v-list> -->
+
+      <v-list two-line>
+        <v-list-group
+          v-for="item in items"
+          :key="item.title"
+          color
+          @click="redirect(item.path)"
+        >
+          <template v-slot:activator>
+            <v-list-item-action>
+              <v-icon v-text="item.icon" />
+            </v-list-item-action>
+
+            <v-list-item-content>
+              <v-list-item-title v-text="item.title" />
+            </v-list-item-content>
+          </template>
+
+          <v-list-item
+            v-for="subItem in item.items"
+            :key="subItem.title"
+            :to="subItem.path"
+          >
+            <v-list-item-content>
+              <v-list-item-title v-text="subItem.title" />
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
       </v-list>
     </v-navigation-drawer>
 
@@ -164,6 +193,11 @@ export default {
           icon: 'devices',
           title: 'Devices',
           path: '/devices',
+          items: [
+            { title: 'List Devices', path: '/devices' },
+            { title: 'Pending Devices', path: '/devices/pending' },
+            { title: 'Reject Devices' },
+          ],
         },
         {
           icon: 'history',
@@ -182,6 +216,10 @@ export default {
           type: 'method',
           method: 'logout',
         },
+      ],
+      admins: [
+        ['Management', 'people_outline'],
+        ['Settings', 'settings'],
       ],
     };
   },
@@ -213,6 +251,10 @@ export default {
       default:
         break;
       }
+    },
+    redirect(path) {
+      // eslint-disable-next-line no-console
+      this.$router.push(path);
     },
   },
 };

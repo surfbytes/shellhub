@@ -14,17 +14,30 @@
       <v-spacer />
       <DeviceAdd />
       <v-btn
+        class="mr-2"
         outlined
         @click="$store.dispatch('modals/showAddDevice', true)"
       >
         Add Device
+      </v-btn>
+      <v-btn
+        outlined
+        to="/devices/pending"
+      >
+        Manage Devices
       </v-btn>
     </div>
     <v-card class="mt-2">
       <v-app-bar
         flat
         color="transparent"
-      />
+      >
+        <v-tabs>
+          <v-tab>Device List</v-tab>
+          <v-tab>Pending</v-tab>
+        <v-tab>Rejected</v-tab>
+        </v-tabs>
+      </v-app-bar>
       <v-divider />
 
       <v-card-text class="pa-0">
