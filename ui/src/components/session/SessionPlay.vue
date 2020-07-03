@@ -60,8 +60,8 @@ export default {
   name: 'SessionPlay',
 
   props: {
-    logs: {
-      type: Array,
+    uid: {
+      type: String,
       required: true,
     },
   },
@@ -71,30 +71,23 @@ export default {
       dialog: false,
       disable: false,
       currentTime: 0,
+      totalLength: 0,
+      timerDisplayEnd: null,
+      timerDisplayNow: null,
     };
   },
 
   computed: {
-    logsData: {
-      get() {
-        return this.logs;
-      },
-    },
-
     length() {
       return this.logs.length;
     },
 
     now() {
-      return this.duration(this.currentTime).display;
+      return this.timerDisplayNow;
     },
 
     end() {
-      return this.duration(null).display;
-    },
-
-    totalLength() {
-      return this.duration(null).intervalLength;
+      return this.timerDisplayEnd;
     },
 
   },
@@ -105,6 +98,20 @@ export default {
         this.close();
       }
     },
+  },
+
+  updated() {
+    this.timerDisplayNow = this.duration(this.currentTime).display;
+  },
+
+  async created() {
+    await this.$store.dispatch('sessions/getLogSession', this.uid);
+    this.logs = this.$store.getters['sessions/getLogSession'];
+    this.totalLength = this.duration(null).intervalLength;
+    this.timerDisplayEnd = this.duration(null).display;
+    this.timerDisplayNow = this.duration(this.currentTime).display;
+    // eslint-disable-next-line no-console
+    console.log(this.logs);
   },
 
   methods: {
@@ -120,26 +127,26 @@ export default {
 
     duration(timeMs) {
       let interval = 0;
-      if (!timeMs) { // not params, use default to maxlength
-        const max = new Date(this.logsData[this.length - 1].time);
-        const min = new Date(this.logsData[0].time);
+      if (!timeMs) { // not params, will return metrics to max timelengtht
+        const max = new Date(this.logs[this.length - 1].time);
+        const min = new Date(this.logs[0].time);
         interval = max - min;
-      } else {
+      } else { // it will format to the time argument passed
         interval = timeMs;
       }
       const duration = moment.duration(interval, 'milliseconds');
-      const tD = {
+      const TimeObject = {
         seconds: Math.floor(duration.asSeconds()),
         minutes: Math.floor(duration.asMinutes()),
         hours: Math.floor(duration.asHours()),
       };
       return {
-        display: `${tD.hours}:${tD.minutes}:${tD.seconds}`,
-        intervalLength: interval,
+        display: `${TimeObject.hours}:${TimeObject.minutes}:${TimeObject.seconds}`, // format to slider label
+        intervalLength: interval, // length of slider in Ms
       };
     },
 
-    timer() {
+    timer() { // Increments the slider
       if (this.currentTime >= this.totalLength) return;
       this.currentTime += 100;
       this.iterativeTimer = setTimeout(this.timer.bind(null), 100);
@@ -151,7 +158,7 @@ export default {
       this.$nextTick(() => this.fitAddon.fit());
       this.fitAddon.fit();
       this.xterm.focus();
-      this.print(0, this.logsData);
+      this.print(0, this.logs);
       this.timer();
       if (this.xterm.element) { // check already existence
         this.xterm.reset();
@@ -166,15 +173,13 @@ export default {
       this.currentTime = 0;
     },
 
-    print(i, obj) {
-      this.xterm.write(`${this.logs[i].message}`);
-      if (i === this.logs.length - 1) {
-        return;
-      }
-      const nextObj = this.logs[i + 1];
-      const now = new Date(obj.time);
-      const future = new Date(nextObj.time);
-      this.iterativePrinting = setTimeout(this.print.bind(null, i + 1, nextObj), future - now);
+    print(i, logsArray) {
+      this.xterm.write(`${logsArray[i].message}`);
+      if (i === logsArray.length - 1) return;
+      const now = new Date(logsArray[i].time);
+      const future = new Date(logsArray[i + 1].time);
+      const interval = future - now;
+      this.iterativePrinting = setTimeout(this.print.bind(null, i + 1, logsArray), interval);
     },
   },
 };
