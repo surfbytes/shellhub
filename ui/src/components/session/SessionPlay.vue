@@ -120,9 +120,11 @@ export default {
       this.xterm = new Terminal({ // instantiate
         cursorBlink: true,
         fontFamily: 'monospace',
+        cols: this.logs[0].width,
+        rows: this.logs[0].height,
       });
       this.fitAddon = new FitAddon(); // load fit
-      this.xterm.loadAddon(this.fitAddon); // adjust screen in container
+      // this.xterm.loadAddon(this.fitAddon); // adjust screen in container
     },
 
     duration(timeMs) {
@@ -156,7 +158,7 @@ export default {
       this.disable = true;
       this.xterm.open(this.$refs.playterminal);
       this.$nextTick(() => this.fitAddon.fit());
-      this.fitAddon.fit();
+      // this.fitAddon.fit();
       this.xterm.focus();
       this.print(0, this.logs);
       this.timer();

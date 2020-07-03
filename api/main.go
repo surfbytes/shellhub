@@ -483,8 +483,10 @@ func main() {
 
 	internalAPI.POST("/sessions/:uid/record", func(c echo.Context) error {
 		var req struct {
-			UID string `json:"uid"`
-			Log string `json:"log"`
+			UID    string `json:"uid"`
+			Log    string `json:"log"`
+			Width  int    `json:"width"`
+			Height int    `json:"height"`
 		}
 		if err := c.Bind(&req); err != nil {
 			return err
@@ -494,7 +496,7 @@ func main() {
 		store := mongo.NewStore(ctx.Value("db").(*mgo.Database))
 		svc := sessionmngr.NewService(store)
 
-		return svc.RecordSession(ctx, models.UID(c.Param("uid")), req.Log)
+		return svc.RecordSession(ctx, models.UID(c.Param("uid")), req.Log, req.Width, req.Height)
 	})
 
 	publicAPI.GET("/sessions/:uid/play", func(c echo.Context) error {

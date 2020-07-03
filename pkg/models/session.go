@@ -25,6 +25,8 @@ type ActiveSession struct {
 type RecordedSession struct {
 	UID      UID       `json:"uid"`
 	Message  string    `json:"message", bson:"message"`
-	TenantID string    `json:"tenant_id" bson:"tenant_id"`
-	Time     time.Time `json:"time" bson:"time"`
+	TenantID string    `json:"tenant_id" bson:"tenant_id,omitempty"`
+	Time     time.Time `json:"time" bson:"time,omitempty"`
+	Width    int       `json:"width" bson:"width,omitempty"`
+	Height   int       `json:"height" bson:"height,omitempty"`
 }
