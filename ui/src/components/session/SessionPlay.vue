@@ -13,37 +13,64 @@
     </v-tooltip>
     <v-dialog
       v-model="dialog"
-      max-width="1024px"
+      :max-width="rows * cols"
     >
-      <v-card>
+      <v-card
+        :elevation="0"
+      >
         <v-toolbar
           dark
           color="primary"
         >
-          <v-toolbar-title>Play</v-toolbar-title>
+          <v-toolbar-title>Watch Session</v-toolbar-title>
           <v-spacer />
         </v-toolbar>
         <div ref="playterminal" />
-        <v-card>
-          <v-card-actions>
-            <v-btn
-              v-show="!disable"
-              :disabled="disable"
-              color="primary"
-              class="mt-4"
-              @click="connect()"
+        <v-container>
+          <v-row no-gutters>
+            <v-col
+              cols="2"
+              sm="6"
+              md="2"
             >
-              Play
-            </v-btn>
-            <v-slider
-              v-model="currentTime"
-              readonly
-              min="0"
-              :max="totalLength"
-              :label="`${now} - ${end}`"
-            />
-          </v-card-actions>
-        </v-card>
+              <v-card
+                :elevation="0"
+                class="pt-4"
+                tile
+              >
+                <v-icon
+                  large
+                  class="pl-12"
+                  :disabled="disable"
+                  color="primary"
+                  @click="connect()"
+                >
+                  mdi-play-circle
+                </v-icon>
+                <span>Play</span>
+              </v-card>
+            </v-col>
+            <v-col
+              cols="6"
+              md="10"
+            >
+              <v-card
+                :elevation="0"
+                class="pt-4 pr-10"
+                tile
+              >
+                <v-slider
+                  v-model="currentTime"
+                  class="ml-0"
+                  readonly
+                  min="0"
+                  :max="totalLength"
+                  :label="`${nowTimerDisplay} - ${endTimerDisplay}`"
+                />
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
       </v-card>
     </v-dialog>
   </fragment>
@@ -72,8 +99,11 @@ export default {
       disable: false,
       currentTime: 0,
       totalLength: 0,
-      timerDisplayEnd: null,
-      timerDisplayNow: null,
+      endTimerDisplay: null,
+      getTimerNow: null,
+      logs: [],
+      cols: 0,
+      rows: 0,
     };
   },
 
@@ -82,14 +112,9 @@ export default {
       return this.logs.length;
     },
 
-    now() {
-      return this.timerDisplayNow;
+    nowTimerDisplay() {
+      return this.getTimerNow;
     },
-
-    end() {
-      return this.timerDisplayEnd;
-    },
-
   },
 
   watch: {
@@ -101,15 +126,17 @@ export default {
   },
 
   updated() {
-    this.timerDisplayNow = this.duration(this.currentTime).display;
+    this.getTimerNow = this.getDisplaySliderInfo(this.currentTime).display;
   },
 
   async created() {
     await this.$store.dispatch('sessions/getLogSession', this.uid);
     this.logs = this.$store.getters['sessions/getLogSession'];
-    this.totalLength = this.duration(null).intervalLength;
-    this.timerDisplayEnd = this.duration(null).display;
-    this.timerDisplayNow = this.duration(this.currentTime).display;
+    this.totalLength = this.getDisplaySliderInfo(null).intervalLength;
+    this.endTimerDisplay = this.getDisplaySliderInfo(null).display;
+    this.getTimerNow = this.getDisplaySliderInfo(this.currentTime).display;
+    this.cols = this.logs[0].width;
+    this.rows = this.logs[0].height;
     // eslint-disable-next-line no-console
     console.log(this.logs);
   },
@@ -120,15 +147,15 @@ export default {
       this.xterm = new Terminal({ // instantiate
         cursorBlink: true,
         fontFamily: 'monospace',
-        cols: this.logs[0].width,
-        rows: this.logs[0].height,
+        cols: this.cols,
+        rows: this.rows,
       });
       this.fitAddon = new FitAddon(); // load fit
-      // this.xterm.loadAddon(this.fitAddon); // adjust screen in container
+      this.xterm.loadAddon(this.fitAddon); // adjust screen in container
     },
 
-    duration(timeMs) {
-      let interval = 0;
+    getDisplaySliderInfo(timeMs) {
+      let interval;
       if (!timeMs) { // not params, will return metrics to max timelengtht
         const max = new Date(this.logs[this.length - 1].time);
         const min = new Date(this.logs[0].time);
@@ -158,7 +185,7 @@ export default {
       this.disable = true;
       this.xterm.open(this.$refs.playterminal);
       this.$nextTick(() => this.fitAddon.fit());
-      // this.fitAddon.fit();
+      this.fitAddon.fit();
       this.xterm.focus();
       this.print(0, this.logs);
       this.timer();
@@ -178,9 +205,9 @@ export default {
     print(i, logsArray) {
       this.xterm.write(`${logsArray[i].message}`);
       if (i === logsArray.length - 1) return;
-      const now = new Date(logsArray[i].time);
+      const nowTimerDisplay = new Date(logsArray[i].time);
       const future = new Date(logsArray[i + 1].time);
-      const interval = future - now;
+      const interval = future - nowTimerDisplay;
       this.iterativePrinting = setTimeout(this.print.bind(null, i + 1, logsArray), interval);
     },
   },
