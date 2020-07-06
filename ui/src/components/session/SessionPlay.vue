@@ -14,7 +14,7 @@
     </v-tooltip>
     <v-dialog
       v-model="dialog"
-      :max-width="rows * cols"
+      :max-width="1024"
     >
       <v-card
         :elevation="0"
@@ -35,20 +35,43 @@
               md="2"
             >
               <v-card
+                v-if="!disable"
+                :elevation="0"
+                class="pt-4"
+                tile
+              >
+                <v-btn
+                  large
+                  color="primary"
+                  @click="connect()"
+                >
+                  Watch
+                </v-btn>
+              </v-card>
+              <v-card
+                v-else
                 :elevation="0"
                 class="pt-4"
                 tile
               >
                 <v-icon
+                  v-if="!paused"
                   large
                   class="pl-12"
-                  :disabled="disable"
                   color="primary"
-                  @click="connect()"
+                  @click="paused = !paused"
+                >
+                  mdi-pause-circle
+                </v-icon>
+                <v-icon
+                  v-else
+                  large
+                  class="pl-12"
+                  color="primary"
+                  @click="paused = !paused"
                 >
                   mdi-play-circle
                 </v-icon>
-                <span>Play</span>
               </v-card>
             </v-col>
             <v-col
@@ -106,6 +129,7 @@ export default {
       totalLength: 0,
       endTimerDisplay: null,
       getTimerNow: null,
+      paused: false,
       logs: [],
       cols: 0,
       rows: 0,
@@ -187,8 +211,10 @@ export default {
     },
 
     timer() { // Increments the slider
-      if (this.currentTime >= this.totalLength) return;
-      this.currentTime += 100;
+      if (!this.paused) {
+        if (this.currentTime >= this.totalLength) return;
+        this.currentTime += 100;
+      }
       this.iterativeTimer = setTimeout(this.timer.bind(null), 100);
     },
 
@@ -211,15 +237,20 @@ export default {
       clearInterval(this.iterativePrinting);
       clearInterval(this.iterativeTimer);
       this.currentTime = 0;
+      this.paused = false;
     },
 
     print(i, logsArray) {
-      this.xterm.write(`${logsArray[i].message}`);
-      if (i === logsArray.length - 1) return;
-      const nowTimerDisplay = new Date(logsArray[i].time);
-      const future = new Date(logsArray[i + 1].time);
-      const interval = future - nowTimerDisplay;
-      this.iterativePrinting = setTimeout(this.print.bind(null, i + 1, logsArray), interval);
+      if (!this.paused) {
+        this.xterm.write(`${logsArray[i].message}`);
+        if (i === logsArray.length - 1) return;
+        const nowTimerDisplay = new Date(logsArray[i].time);
+        const future = new Date(logsArray[i + 1].time);
+        const interval = future - nowTimerDisplay;
+        this.iterativePrinting = setTimeout(this.print.bind(null, i + 1, logsArray), interval);
+      } else { // try to execute back every 100 ms
+        this.iterativePrinting = setTimeout(this.print.bind(null, i, logsArray), 100);
+      }
     },
   },
 };
