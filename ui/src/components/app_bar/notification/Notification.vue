@@ -29,25 +29,32 @@
 
       <v-divider />
 
-      <v-list-item
-        v-for="(item, index) in getListNotifications"
-        :key="index"
-        router
-        :to="item.path"
-      >
-        <v-list-item-content>
-          <v-list-item-title>
-            {{ item.name }}
-          </v-list-item-title>
-        </v-list-item-content>
+      <v-list class="pa-0">
+        <v-list-item-group :v-model="1">
+          <v-list-item
+            v-for="item in getListNotifications"
+            :key="item.uid"
+            @click="redirectDetailsDevice(item.uid)"
+          >
+            <v-list-item-content>
+              <v-list-item-title>
+                <!-- <router-link :to="{ name: 'detailsDevice', params: { id: item.uid } }"> -->
+                {{ item.name }}
+                <!-- </router-link> -->
+              </v-list-item-title>
+            </v-list-item-content>
 
-        <v-list-item-action>
-          <DeviceAccept
-            :uid="item.uid"
-            @update="refresh"
-          />
-        </v-list-item-action>
-      </v-list-item>
+            <v-list-item-action>
+              <DeviceAccept
+                :uid="item.uid"
+                :notification-status="true"
+                :operation-type="1"
+                @update="refresh"
+              />
+            </v-list-item-action>
+          </v-list-item>
+        </v-list-item-group>
+      </v-list>
 
       <v-divider />
 
@@ -109,6 +116,10 @@ export default {
 
     refresh() {
       this.getNotifications();
+    },
+
+    redirectDetailsDevice(uid) {
+      this.$router.push({ name: 'detailsDevice', params: { id: uid } });
     },
   },
 };

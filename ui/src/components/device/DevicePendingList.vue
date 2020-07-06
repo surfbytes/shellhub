@@ -1,81 +1,60 @@
 <template>
   <fragment>
-    <div class="d-flex pa-0 align-center">
-      <h1>Pending Devices</h1>
-      <v-spacer />
-      <v-text-field
-        v-model="search"
-        append-icon="mdi-magnify"
-        label="Search by hostname"
-        class="mx-6"
-        single-line
-        hide-details
-      />
-      <v-spacer />
-      <DeviceAdd />
-    </div>
-    <v-card class="mt-2">
-      <v-app-bar
-        flat
-        color="transparent"
-      />
+    <v-card-text class="pa-0">
+      <v-data-table
+        class="elevation-1"
+        :headers="headers"
+        :items="getListPendingDevices"
+        item-key="uid"
+        :sort-by="['started_at']"
+        :sort-desc="[true]"
+        :items-per-page="10"
+        :footer-props="{'items-per-page-options': [10, 25, 50, 100]}"
+        :server-items-length="getNumberPendingDevices"
+        :options.sync="pagination"
+        :disable-sort="true"
+        :search="search"
+      >
+        <template slot="no-data">
+          There are no more pending devices
+        </template>
 
-      <v-divider />
+        <template v-slot:item.hostname="{ item }">
+          <router-link :to="{ name: 'detailsDevice', params: { id: item.uid } }">
+            {{ item.name }}
+          </router-link>
+        </template>
 
-      <v-card-text class="pa-0">
-        <v-data-table
-          class="elevation-1"
-          :headers="headers"
-          :items="getListPendingDevices"
-          item-key="uid"
-          :sort-by="['started_at']"
-          :sort-desc="[true]"
-          :items-per-page="10"
-          :footer-props="{'items-per-page-options': [10, 25, 50, 100]}"
-          :server-items-length="getNumberPendingDevices"
-          :options.sync="pagination"
-          :disable-sort="true"
-          :search="search"
-        >
-          <template slot="no-data">
-            There are no more pending devices
-          </template>
+        <template v-slot:item.info.pretty_name="{ item }">
+          <DeviceIcon :icon-name="item.info.id" />
+          {{ item.info.pretty_name }}
+        </template>
 
-          <template v-slot:item.hostname="{ item }">
-            <router-link :to="{ name: 'detailsDevice', params: { id: item.uid } }">
-              {{ item.name }}
-            </router-link>
-          </template>
+        <template v-slot:item.last_seen="{ item }">
+          {{ item.last_seen | moment("ddd, MMM Do YY, h:mm:ss a") }}
+        </template>
 
-          <template v-slot:item.info.pretty_name="{ item }">
-            <DeviceIcon :icon-name="item.info.id" />
-            {{ item.info.pretty_name }}
-          </template>
-
-          <template v-slot:item.actions="{ item }">
-            <DeviceAccept
-              :uid="item.uid"
-              :state-list="true"
-              @update="refresh"
-            />
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
+        <template v-slot:item.actions="{ item }">
+          <DeviceAccept
+            :uid="item.uid"
+            :operation-type="1"
+            @update="refresh"
+          />
+        </template>
+      </v-data-table>
+    </v-card-text>
   </fragment>
 </template>
 
 <script>
 
-import DeviceAdd from '@/components/device/DeviceAdd';
 import DeviceIcon from '@/components/device//DeviceIcon';
 import DeviceAccept from '@/components/device//DeviceAccept';
 
 export default {
-  name: 'DevicePendingList',
+  name: 'DeviceList',
 
   components: {
-    DeviceAdd,
     DeviceIcon,
     DeviceAccept,
   },
@@ -83,6 +62,7 @@ export default {
   data() {
     return {
       pagination: {},
+      copySnack: false,
       search: '',
       headers: [
         {
@@ -93,6 +73,11 @@ export default {
         {
           text: 'Operating System',
           value: 'info.pretty_name',
+          align: 'center',
+        },
+        {
+          text: 'Last Seen',
+          value: 'last_seen',
           align: 'center',
         },
         {
@@ -118,18 +103,18 @@ export default {
   watch: {
     pagination: {
       handler() {
-        this.getPendingDevices();
+        this.getDevices();
       },
       deep: true,
     },
 
     search() {
-      this.getPendingDevices();
+      this.getDevices();
     },
   },
 
   methods: {
-    getPendingDevices() {
+    getDevices() {
       let filter = null;
       let encodedFilter = null;
 

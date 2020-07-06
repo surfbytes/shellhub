@@ -21,15 +21,15 @@ const router = new Router({
       children: [
         {
           path: '',
-          component: () => import('./../components/device/List.vue'),
+          component: () => import('./../components/device/DeviceList.vue'),
         },
         {
           path: 'pending',
-          component: () => import('./../components/device/Pending.vue'),
+          component: () => import('./../components/device/DevicePendingList.vue'),
         },
         {
           path: 'rejected',
-          component: () => import('./../components/device/Rejected.vue'),
+          component: () => import('./../components/device/DeviceRejectedList.vue'),
         },
       ],
     },

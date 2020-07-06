@@ -11,6 +11,7 @@ export default {
     page: 0,
     perPage: 0,
     filter: null,
+    status: '',
   },
 
   getters: {
@@ -21,6 +22,7 @@ export default {
     getPage: (state) => state.page,
     getPerPage: (state) => state.perPage,
     getFilter: (state) => state.filter,
+    getStatus: (state) => state.status,
   },
 
   mutations: {
@@ -47,6 +49,7 @@ export default {
       Vue.set(state, 'page', data.page);
       Vue.set(state, 'perPage', data.perPage);
       Vue.set(state, 'filter', data.filter);
+      Vue.set(state, 'status', data.status);
     },
 
     setFilter: (state, filter) => {
@@ -88,12 +91,12 @@ export default {
     },
 
     refresh: async ({ commit, state }) => {
-      const res = await apiDevice.fetchDevices(state.perPage, state.page, state.filter, 'pending');
-      commit('setDevices', res);
-    },
-
-    refresh2: async ({ commit, state }) => {
-      const res = await apiDevice.fetchDevices(state.perPage, state.page, state.filter, 'allow');
+      const res = await apiDevice.fetchDevices(
+        state.perPage,
+        state.page,
+        state.filter,
+        state.status,
+      );
       commit('setDevices', res);
     },
   },

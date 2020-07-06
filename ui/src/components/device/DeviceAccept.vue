@@ -1,12 +1,12 @@
 <template>
   <fragment>
     <div
-      v-if="!stateList"
+      v-if="notificationStatus"
     >
       <v-btn
         x-small
         color="primary"
-        @click="statusOperation(true)"
+        @click="setMessages(1)"
       >
         Accept
       </v-btn>
@@ -19,16 +19,27 @@
         class="mr-2"
         small
         outlined
-        @click="statusOperation(true)"
+        @click="setMessages(1)"
       >
         Accept
       </v-btn>
+
       <v-btn
+        v-if="operationType == 1"
         small
         outlined
-        @click="statusOperation(false)"
+        @click="setMessages(2)"
       >
         Reject
+      </v-btn>
+
+      <v-btn
+        v-else-if="operationType == 3"
+        small
+        outlined
+        @click="setMessages(3)"
+      >
+        Remove
       </v-btn>
     </div>
 
@@ -43,14 +54,21 @@
 
         <v-card-text class="mt-4 mb-3 pb-1">
           <div
-            v-if="operationAccept"
+            v-if="typeMessage == 1"
           >
             You are about to accept this device
           </div>
+
           <div
-            v-else
+            v-else-if="typeMessage == 2"
           >
             You are about to reject this device
+          </div>
+
+          <div
+            v-else-if="typeMessage == 3"
+          >
+            You are about to delete this device
           </div>
         </v-card-text>
 
@@ -61,23 +79,31 @@
             text
             @click="dialog=!dialog"
           >
-            Close
+            Cancel
           </v-btn>
 
           <v-btn
+            v-if="typeMessage == 1"
             text
-            @click="operationDevice();"
+            @click="acceptDevice();"
           >
-            <div
-              v-if="operationAccept"
-            >
-              Accept
-            </div>
-            <div
-              v-else
-            >
-              Reject
-            </div>
+            Accept
+          </v-btn>
+
+          <v-btn
+            v-if="typeMessage == 2"
+            text
+            @click="rejectDevice();"
+          >
+            Reject
+          </v-btn>
+
+          <v-btn
+            v-if="typeMessage == 3"
+            text
+            @click="removeDevice();"
+          >
+            Remove
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -96,10 +122,19 @@ export default {
       required: true,
     },
 
-    stateList: {
+    notificationStatus: {
       type: Boolean,
       required: false,
       default: false,
+    },
+
+    // Operation Type Received
+    // 1 - Accept <- pending
+    // 2 - Reject <- deny
+    // 3 - Remove <- unsed
+    operationType: {
+      type: Number,
+      required: true,
     },
   },
 
@@ -107,24 +142,34 @@ export default {
     return {
       dialog: false,
       operationAccept: false,
+      typeMessage: 0,
     };
   },
 
   methods: {
-    statusOperation(operation) {
-      this.operationAccept = operation;
+    setMessages(operation) {
       this.dialog = !this.dialog;
+      this.typeMessage = operation;
     },
 
-    async operationDevice() {
-      if (this.operationAccept) {
-        await this.$store.dispatch('devices/accept', this.uid);
-      } else {
-        await this.$store.dispatch('devices/reject', this.uid);
-      }
+    async acceptDevice() {
+      await this.$store.dispatch('devices/accept', this.uid);
+      this.refreshDevices();
+    },
 
+    async rejectDevice() {
+      await this.$store.dispatch('devices/reject', this.uid);
+      this.refreshDevices();
+    },
+
+    async removeDevice() {
+      await this.$store.dispatch('devices/remove', this.uid);
+      this.refreshDevices();
+    },
+
+    refreshDevices() {
       this.$emit('update');
-      if (window.location.pathname === '/devices/pending') {
+      if (window.location.pathname === '/devices/pending' || window.location.pathname === '/devices') {
         this.$store.dispatch('devices/refresh');
         this.$store.dispatch('notifications/fetch');
       }

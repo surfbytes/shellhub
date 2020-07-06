@@ -91,10 +91,15 @@ export default {
 
   methods: {
     async getDevices() {
-      await this.$store.dispatch('devices/setFilter', this.search);
-      // eslint-disable-next-line no-console
-      console.log(this.search);
-      // this.$store.dispatch('devices/refresh2');
+      let encodedFilter = null;
+
+      if (this.search) {
+        const filter = [{ type: 'property', params: { name: 'name', operator: 'like', value: this.search } }];
+        encodedFilter = btoa(JSON.stringify(filter));
+      }
+
+      await this.$store.dispatch('devices/setFilter', encodedFilter);
+      this.$store.dispatch('devices/refresh');
     },
 
     showCopySnack() {
